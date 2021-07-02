@@ -1,73 +1,5 @@
--- MySQL Workbench Forward Engineering
-
-SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
-SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
-SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
-
--- -----------------------------------------------------
--- Schema optica
--- -----------------------------------------------------
-
--- -----------------------------------------------------
--- Schema optica
--- -----------------------------------------------------
-CREATE SCHEMA IF NOT EXISTS `optica` DEFAULT CHARACTER SET utf8mb4 ;
-USE `optica` ;
-
--- -----------------------------------------------------
--- Table `optica`.`direcciones`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `optica`.`direcciones` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `calle` VARCHAR(45) NOT NULL,
-  `numero` VARCHAR(45) NOT NULL,
-  `piso` VARCHAR(45) NULL,
-  `puerta` VARCHAR(45) NULL,
-  `ciudad` VARCHAR(45) NULL,
-  `cod_postal` VARCHAR(45) NULL,
-  `pais` VARCHAR(45) NOT NULL,
-  PRIMARY KEY (`id`))
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
--- Table `optica`.`proveedores`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `optica`.`proveedores` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `nombre` VARCHAR(45) NOT NULL,
-  `direccion` INT NULL,
-  `telefono` VARCHAR(15) NULL,
-  `fax` VARCHAR(45) NULL,
-  `nif` VARCHAR(11) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE INDEX `nombre_UNIQUE` (`nombre` ASC) VISIBLE,
-  INDEX `fk_proveedores_direcciones_idx` (`direccion` ASC) VISIBLE,
-  CONSTRAINT `fk_proveedores_direcciones`
-    FOREIGN KEY (`direccion`)
-    REFERENCES `optica`.`direcciones` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
--- Table `optica`.`marcas`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `optica`.`marcas` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `nombre` VARCHAR(45) NOT NULL,
-  `proveedor` INT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE INDEX `nombre_UNIQUE` (`nombre` ASC) VISIBLE,
-  INDEX `fk_proveedor_nombre_idx` (`proveedor` ASC) VISIBLE,
-  CONSTRAINT `fk_proveedor_nombre`
-    FOREIGN KEY (`proveedor`)
-    REFERENCES `optica`.`proveedores` (`id`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE)
-ENGINE = InnoDB;
-
+DROP DATABASE IF EXISTS optica;
+CREATE DATABASE optica CHARACTER SET utf8mb4;
 
 -- -----------------------------------------------------
 -- Table `optica`.`tipos_montura`
@@ -81,26 +13,52 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
+-- Table `optica`.`proveedores`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `optica`.`proveedores` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `nombre` VARCHAR(45) NOT NULL,
+  `telefono` VARCHAR(15) NULL,
+  `fax` VARCHAR(15) NULL,
+  `nif` VARCHAR(11) NOT NULL,
+  `calle` VARCHAR(45) NULL,
+  `numero` INT NULL,
+  `piso` VARCHAR(5) NULL,
+  `puerta` VARCHAR(5) NULL,
+  `ciudad` VARCHAR(45) NULL,
+  `cod_postal` VARCHAR(10) NULL,
+  `pais` VARCHAR(45) NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `nombre_UNIQUE` (`nombre` ASC) VISIBLE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
 -- Table `optica`.`gafas`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `optica`.`gafas` (
   `id` INT NOT NULL AUTO_INCREMENT,
+  `marca` VARCHAR(45) NULL,
   `modelo` VARCHAR(45) NULL,
-  `marca` INT NULL,
-  `tipo_montura` INT NULL,
+  `grad_der` FLOAT NULL,
+  `grad_izq` FLOAT NULL,
+  `color_der` VARCHAR(45) NULL,
+  `color_izq` VARCHAR(45) NULL,
   `precio` FLOAT NULL,
+  `tipos_montura_id` INT NOT NULL,
+  `proveedores_id` INT NOT NULL,
   PRIMARY KEY (`id`),
-  INDEX `fk_gafas_marcas_idx` (`marca` ASC) VISIBLE,
-  INDEX `fk_gafas_tipos_montura_idx` (`tipo_montura` ASC) VISIBLE,
   UNIQUE INDEX `modelo_UNIQUE` (`modelo` ASC) VISIBLE,
-  CONSTRAINT `fk_gafas_marca`
-    FOREIGN KEY (`marca`)
-    REFERENCES `optica`.`marcas` (`id`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE,
-  CONSTRAINT `fk_gafas_tipos_montura`
-    FOREIGN KEY (`tipo_montura`)
+  INDEX `fk_gafas_tipos_montura1_idx` (`tipos_montura_id` ASC) VISIBLE,
+  INDEX `fk_gafas_proveedores1_idx` (`proveedores_id` ASC) VISIBLE,
+  CONSTRAINT `fk_gafas_tipos_montura1`
+    FOREIGN KEY (`tipos_montura_id`)
     REFERENCES `optica`.`tipos_montura` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_gafas_proveedores1`
+    FOREIGN KEY (`proveedores_id`)
+    REFERENCES `optica`.`proveedores` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -122,66 +80,45 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `optica`.`clientes` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `nombre` VARCHAR(45) NOT NULL,
-  `direccion` INT NULL,
+  `direccion` VARCHAR(45) NULL,
   `telefono` VARCHAR(15) NOT NULL,
   `email` VARCHAR(45) NULL,
-  `registro_fecha` TIMESTAMP NOT NULL,
+  `registro_fecha` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `recomendado` INT NULL,
-  `clientescol` VARCHAR(45) NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_clientes_clientes_idx` (`recomendado` ASC) VISIBLE,
-  INDEX `fk_clientes_direcciones_idx` (`direccion` ASC) VISIBLE,
   CONSTRAINT `fk_clientes_clientes`
     FOREIGN KEY (`recomendado`)
     REFERENCES `optica`.`clientes` (`id`)
     ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_clientes_direcciones`
-    FOREIGN KEY (`direccion`)
-    REFERENCES `optica`.`direcciones` (`id`)
-    ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `optica`.`ventas`
+-- Table `optica`.`pedidos`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `optica`.`ventas` (
+CREATE TABLE IF NOT EXISTS `optica`.`pedidos` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `empleado` INT NULL,
-  `cliente` INT NULL,
+  `fecha` DATETIME NOT NULL,
+  `clientes_id` INT NOT NULL,
+  `empleados_id` INT NOT NULL,
+  `gafas_id` INT NOT NULL,
   PRIMARY KEY (`id`),
-  INDEX `fk_ventas_empleados_idx` (`empleado` ASC) VISIBLE,
-  INDEX `fk_ventas_clientes_idx` (`cliente` ASC) VISIBLE,
-  CONSTRAINT `fk_ventas_empleados`
-    FOREIGN KEY (`empleado`)
+  INDEX `fk_pedidos_clientes1_idx` (`clientes_id` ASC) VISIBLE,
+  INDEX `fk_pedidos_empleados1_idx` (`empleados_id` ASC) VISIBLE,
+  INDEX `fk_pedidos_gafas1_idx` (`gafas_id` ASC) VISIBLE,
+  CONSTRAINT `fk_pedidos_clientes1`
+    FOREIGN KEY (`clientes_id`)
+    REFERENCES `optica`.`clientes` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_pedidos_empleados1`
+    FOREIGN KEY (`empleados_id`)
     REFERENCES `optica`.`empleados` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_ventas_clientes`
-    FOREIGN KEY (`cliente`)
-    REFERENCES `optica`.`clientes` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
--- Table `optica`.`detalle_ventas`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `optica`.`detalle_ventas` (
-  `ventas_id` INT NOT NULL,
-  `gafas_id` INT NOT NULL,
-  PRIMARY KEY (`ventas_id`, `gafas_id`),
-  INDEX `fk_ventas_has_gafas_gafas1_idx` (`gafas_id` ASC) VISIBLE,
-  INDEX `fk_ventas_has_gafas_ventas1_idx` (`ventas_id` ASC) VISIBLE,
-  CONSTRAINT `fk_ventas_has_gafas_ventas1`
-    FOREIGN KEY (`ventas_id`)
-    REFERENCES `optica`.`ventas` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_ventas_has_gafas_gafas1`
+  CONSTRAINT `fk_pedidos_gafas1`
     FOREIGN KEY (`gafas_id`)
     REFERENCES `optica`.`gafas` (`id`)
     ON DELETE NO ACTION
@@ -189,39 +126,106 @@ CREATE TABLE IF NOT EXISTS `optica`.`detalle_ventas` (
 ENGINE = InnoDB;
 
 
--- -----------------------------------------------------
--- Table `optica`.`vidrios`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `optica`.`vidrios` (
-  `id` INT NOT NULL,
-  `grad_der` FLOAT NULL,
-  `grad_izq` FLOAT NULL,
-  `color_der` VARCHAR(25) NULL,
-  `color_izq` VARCHAR(25) NULL,
-  `gafas_id` INT NOT NULL,
-  PRIMARY KEY (`id`),
-  INDEX `fk_vidrios_gafas1_idx` (`gafas_id` ASC) VISIBLE,
-  CONSTRAINT `fk_vidrios_gafas1`
-    FOREIGN KEY (`gafas_id`)
-    REFERENCES `optica`.`gafas` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-USE `optica` ;
 
 -- -----------------------------------------------------
--- Placeholder table for view `optica`.`view1`
+-- Data for table `optica`.`tipos_montura`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `optica`.`view1` (`id` INT);
-
--- -----------------------------------------------------
--- View `optica`.`view1`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `optica`.`view1`;
+START TRANSACTION;
 USE `optica`;
+INSERT INTO `optica`.`tipos_montura` (`id`, `nombre_tipo`, `color`) VALUES (DEFAULT, 'pasta', 'negro');
+INSERT INTO `optica`.`tipos_montura` (`id`, `nombre_tipo`, `color`) VALUES (DEFAULT, 'clasica', 'gris');
+
+COMMIT;
 
 
-SET SQL_MODE=@OLD_SQL_MODE;
-SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
-SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+-- -----------------------------------------------------
+-- Data for table `optica`.`proveedores`
+-- -----------------------------------------------------
+START TRANSACTION;
+USE `optica`;
+INSERT INTO `optica`.`proveedores` (`id`, `nombre`, `telefono`, `fax`, `nif`, `calle`, `numero`, `piso`, `puerta`, `ciudad`, `cod_postal`, `pais`) VALUES (DEFAULT, 'Optica Andorrana', '956568978', '956568979', '25368855X', 'Av. Meritxell', 41, '1', '1', 'Andorra', '98988', 'Andorra');
+INSERT INTO `optica`.`proveedores` (`id`, `nombre`, `telefono`, `fax`, `nif`, `calle`, `numero`, `piso`, `puerta`, `ciudad`, `cod_postal`, `pais`) VALUES (DEFAULT, 'Vista cansada SL', '956568980', '956568981', '87877415F', 'Ejemplo', 123, '2', '5', 'Valencia', '15454', 'España');
+
+COMMIT;
+
+
+-- -----------------------------------------------------
+-- Data for table `optica`.`gafas`
+-- -----------------------------------------------------
+START TRANSACTION;
+USE `optica`;
+INSERT INTO `optica`.`gafas` (`id`, `marca`, `modelo`, `grad_der`, `grad_izq`, `color_der`, `color_izq`, `precio`, `tipos_montura_id`, `proveedores_id`) VALUES (DEFAULT, 'Rayban', 'Aviator', 0.5, 0.5, 'verde', 'verde', 120, 1, 1);
+INSERT INTO `optica`.`gafas` (`id`, `marca`, `modelo`, `grad_der`, `grad_izq`, `color_der`, `color_izq`, `precio`, `tipos_montura_id`, `proveedores_id`) VALUES (DEFAULT, 'Police', 'classic', 0, 0, 'gris', 'gris', 140, 2, 2);
+
+COMMIT;
+
+
+-- -----------------------------------------------------
+-- Data for table `optica`.`empleados`
+-- -----------------------------------------------------
+START TRANSACTION;
+USE `optica`;
+INSERT INTO `optica`.`empleados` (`id`, `nombre`) VALUES (DEFAULT, 'Juan');
+INSERT INTO `optica`.`empleados` (`id`, `nombre`) VALUES (DEFAULT, 'Pedro');
+
+COMMIT;
+
+
+-- -----------------------------------------------------
+-- Data for table `optica`.`clientes`
+-- -----------------------------------------------------
+START TRANSACTION;
+USE `optica`;
+INSERT INTO `optica`.`clientes` (`id`, `nombre`, `direccion`, `telefono`, `email`, `registro_fecha`, `recomendado`) VALUES (DEFAULT, 'Laura', 'Sepulveda Barcelona', '623521258', 'laura@gmail.com', DEFAULT, NULL);
+INSERT INTO `optica`.`clientes` (`id`, `nombre`, `direccion`, `telefono`, `email`, `registro_fecha`, `recomendado`) VALUES (DEFAULT, 'Cristian', 'Paseo de la Castellana Madrid', '658599844', 'cristian@gmail.com', DEFAULT, 1);
+
+COMMIT;
+
+
+-- -----------------------------------------------------
+-- Data for table `optica`.`pedidos`
+-- -----------------------------------------------------
+START TRANSACTION;
+USE `optica`;
+INSERT INTO `optica`.`pedidos` (`id`, `fecha`, `clientes_id`, `empleados_id`, `gafas_id`) VALUES (DEFAULT, '2021-06-28', 1, 1, 1);
+INSERT INTO `optica`.`pedidos` (`id`, `fecha`, `clientes_id`, `empleados_id`, `gafas_id`) VALUES (DEFAULT, '2021-06-24', 2, 2, 1);
+INSERT INTO `optica`.`pedidos` (`id`, `fecha`, `clientes_id`, `empleados_id`, `gafas_id`) VALUES (DEFAULT, '2021-06-15', 1, 2, 2);
+INSERT INTO `optica`.`pedidos` (`id`, `fecha`, `clientes_id`, `empleados_id`, `gafas_id`) VALUES (DEFAULT, '2021-06-05', 1, 1, 2);
+
+COMMIT;
+
+
+-- Llista el total de factures d'un client en un període determinat
+
+USE optica;
+SELECT c.nombre Cliente, c.direccion, COUNT(p.id) AS Pedidos, SUM(g.precio) AS "Precio total"
+FROM pedidos p
+INNER JOIN clientes c
+ON p.clientes_id = c.id
+INNER JOIN gafas g
+ON p.gafas_id = g.id
+WHERE p.clientes_id = 1 AND p.fecha between '2021-06-01' AND '2021-06-30';
+
+
+-- Llista els diferents models d'ulleres que ha venut un empleat durant un any
+
+USE optica;
+SELECT g.marca, g.modelo, e.nombre AS empleado, p.fecha
+FROM gafas g
+INNER JOIN pedidos p
+ON p.gafas_id = g.id
+INNER JOIN empleados e
+ON e.id = p.empleados_id
+WHERE p.empleados_id = 1 AND p.fecha between '2020-01-01' AND '2021-12-31';
+
+
+-- Llista els diferents proveïdors que han subministrat ulleres venudes amb èxit per l'òptica
+
+USE optica;
+SELECT pr.nombre AS Proveedor, COUNT(g.id) AS Ventas
+FROM pedidos p
+INNER JOIN gafas g
+ON p.gafas_id = g.id
+INNER JOIN proveedores pr
+ON g.proveedores_id = pr.id
+GROUP BY pr.nombre;
