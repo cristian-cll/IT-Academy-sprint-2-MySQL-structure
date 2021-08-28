@@ -2,18 +2,6 @@ DROP DATABASE IF EXISTS youtube;
 CREATE DATABASE youtube CHARACTER SET utf8mb4;
 
 -- -----------------------------------------------------
--- Table `youtube`.`channels`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `youtube`.`channels` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `channel_name` VARCHAR(45) NULL,
-  `description` TEXT(255) NULL,
-  `created_on` DATE NULL,
-  PRIMARY KEY (`id`))
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
 -- Table `youtube`.`users`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `youtube`.`users` (
@@ -25,13 +13,9 @@ CREATE TABLE IF NOT EXISTS `youtube`.`users` (
   `country` VARCHAR(45) NULL,
   `post_code` VARCHAR(45) NULL,
   `channels_id` INT NOT NULL,
-  PRIMARY KEY (`id`),
-  INDEX `fk_users_channels1_idx` (`channels_id` ASC) VISIBLE,
-  CONSTRAINT `fk_users_channels1`
-    FOREIGN KEY (`channels_id`)
-    REFERENCES `youtube`.`channels` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+  `channel_name` VARCHAR(45) NULL,
+  `channel_description` TEXT(255) NULL,
+  PRIMARY KEY (`id`))
 ENGINE = InnoDB;
 
 
@@ -94,28 +78,6 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `youtube`.`channels_has_subscribers`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `youtube`.`channels_has_subscribers` (
-  `channels_id` INT NOT NULL,
-  `users_id` INT NOT NULL,
-  PRIMARY KEY (`channels_id`, `users_id`),
-  INDEX `fk_channels_has_users_users1_idx` (`users_id` ASC) VISIBLE,
-  INDEX `fk_channels_has_users_channels1_idx` (`channels_id` ASC) VISIBLE,
-  CONSTRAINT `fk_channels_has_users_channels1`
-    FOREIGN KEY (`channels_id`)
-    REFERENCES `youtube`.`channels` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_channels_has_users_users1`
-    FOREIGN KEY (`users_id`)
-    REFERENCES `youtube`.`users` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
 -- Table `youtube`.`playlists`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `youtube`.`playlists` (
@@ -160,12 +122,13 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `youtube`.`users_likes_videos`
+-- Table `youtube`.`users_is_like_videos`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `youtube`.`users_likes_videos` (
+CREATE TABLE IF NOT EXISTS `youtube`.`users_is_like_videos` (
   `users_id` INT NOT NULL,
   `videos_id` INT NOT NULL,
   `is_like` TINYINT NULL,
+  `date` DATETIME NULL,
   PRIMARY KEY (`users_id`, `videos_id`),
   INDEX `fk_users_has_videos_videos1_idx` (`videos_id` ASC) VISIBLE,
   INDEX `fk_users_has_videos_users1_idx` (`users_id` ASC) VISIBLE,
@@ -183,9 +146,9 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `youtube`.`users_likes_comments`
+-- Table `youtube`.`users_is_like_comments`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `youtube`.`users_likes_comments` (
+CREATE TABLE IF NOT EXISTS `youtube`.`users_is_like_comments` (
   `users_id` INT NOT NULL,
   `comments_id` INT NOT NULL,
   `is_like` TINYTEXT NULL,
@@ -228,16 +191,27 @@ CREATE TABLE IF NOT EXISTS `youtube`.`playlists_has_videos` (
 ENGINE = InnoDB;
 
 
-
 -- -----------------------------------------------------
--- Data for table `youtube`.`channels`
+-- Table `youtube`.`user_channel_has_subscribers`
 -- -----------------------------------------------------
-START TRANSACTION;
-USE `youtube`;
-INSERT INTO `youtube`.`channels` (`id`, `channel_name`, `description`, `created_on`) VALUES (DEFAULT, 'Rincón de Jose', 'Entertainment', NULL);
-INSERT INTO `youtube`.`channels` (`id`, `channel_name`, `description`, `created_on`) VALUES (DEFAULT, 'Rincón de Laura', 'Fun', NULL);
+CREATE TABLE IF NOT EXISTS `youtube`.`user_channel_has_subscribers` (
+  `users_id` INT NOT NULL,
+  `users_id1` INT NOT NULL,
+  PRIMARY KEY (`users_id`, `users_id1`),
+  INDEX `fk_users_has_users_users2_idx` (`users_id1` ASC) VISIBLE,
+  INDEX `fk_users_has_users_users1_idx` (`users_id` ASC) VISIBLE,
+  CONSTRAINT `fk_users_has_users_users1`
+    FOREIGN KEY (`users_id`)
+    REFERENCES `youtube`.`users` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_users_has_users_users2`
+    FOREIGN KEY (`users_id1`)
+    REFERENCES `youtube`.`users` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
 
-COMMIT;
 
 
 -- -----------------------------------------------------
@@ -245,8 +219,8 @@ COMMIT;
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `youtube`;
-INSERT INTO `youtube`.`users` (`id`, `email`, `username`, `birth_date`, `gender`, `country`, `post_code`, `channels_id`) VALUES (DEFAULT, 'jose@gmail.com', 'jose_01', '1990-05-25', 'Male', 'Spain', '08008', 1);
-INSERT INTO `youtube`.`users` (`id`, `email`, `username`, `birth_date`, `gender`, `country`, `post_code`, `channels_id`) VALUES (DEFAULT, 'laura@gmail.com', 'laura_01', '1992-04-28', 'Female', 'Spain', '09897', 2);
+INSERT INTO `youtube`.`users` (`id`, `email`, `username`, `birth_date`, `gender`, `country`, `post_code`, `channels_id`, `channel_name`, `channel_description`) VALUES (DEFAULT, 'jose@gmail.com', 'jose_01', '1990-05-25', 'Male', 'Spain', '08008', 1, NULL, NULL);
+INSERT INTO `youtube`.`users` (`id`, `email`, `username`, `birth_date`, `gender`, `country`, `post_code`, `channels_id`, `channel_name`, `channel_description`) VALUES (DEFAULT, 'laura@gmail.com', 'laura_01', '1992-04-28', 'Female', 'Spain', '09897', 2, NULL, NULL);
 
 COMMIT;
 
@@ -259,7 +233,6 @@ USE `youtube`;
 INSERT INTO `youtube`.`videos` (`id`, `title`, `description`, `size`, `file_name`, `length`, `thumbnail`, `views`, `status`, `likes`, `dislikes`, `user`) VALUES (DEFAULT, 'Monkey jumping', 'Monkey jumping at forest ', 4, 'monkey_jumping', 3, NULL, DEFAULT, NULL, DEFAULT, DEFAULT, 1);
 INSERT INTO `youtube`.`videos` (`id`, `title`, `description`, `size`, `file_name`, `length`, `thumbnail`, `views`, `status`, `likes`, `dislikes`, `user`) VALUES (DEFAULT, 'Cats smiling', 'Cats smiling and singing', 6, 'cats_smiling', 5, NULL, DEFAULT, NULL, DEFAULT, DEFAULT, 2);
 INSERT INTO `youtube`.`videos` (`id`, `title`, `description`, `size`, `file_name`, `length`, `thumbnail`, `views`, `status`, `likes`, `dislikes`, `user`) VALUES (DEFAULT, 'Persevernace on Mars', 'NASA\'s perseverance', 10, 'perseverance_on_mars', 8, NULL, DEFAULT, NULL, DEFAULT, DEFAULT, 1);
-INSERT INTO `youtube`.`videos` (`id`, `title`, `description`, `size`, `file_name`, `length`, `thumbnail`, `views`, `status`, `likes`, `dislikes`, `user`) VALUES (DEFAULT, 'Cats sleeping', 'Cats slepping on sofa', 2, 'cats_sleeping', 2, NULL, DEFAULT, NULL, DEFAULT, DEFAULT, 2);
 
 COMMIT;
 
@@ -289,17 +262,6 @@ COMMIT;
 
 
 -- -----------------------------------------------------
--- Data for table `youtube`.`channels_has_subscribers`
--- -----------------------------------------------------
-START TRANSACTION;
-USE `youtube`;
-INSERT INTO `youtube`.`channels_has_subscribers` (`channels_id`, `users_id`) VALUES (1, 2);
-INSERT INTO `youtube`.`channels_has_subscribers` (`channels_id`, `users_id`) VALUES (2, 1);
-
-COMMIT;
-
-
--- -----------------------------------------------------
 -- Data for table `youtube`.`playlists`
 -- -----------------------------------------------------
 START TRANSACTION;
@@ -322,24 +284,24 @@ COMMIT;
 
 
 -- -----------------------------------------------------
--- Data for table `youtube`.`users_likes_videos`
+-- Data for table `youtube`.`users_is_like_videos`
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `youtube`;
-INSERT INTO `youtube`.`users_likes_videos` (`users_id`, `videos_id`, `is_like`) VALUES (1, 2, 1);
-INSERT INTO `youtube`.`users_likes_videos` (`users_id`, `videos_id`, `is_like`) VALUES (2, 1, 1);
-INSERT INTO `youtube`.`users_likes_videos` (`users_id`, `videos_id`, `is_like`) VALUES (2, 3, 0);
+INSERT INTO `youtube`.`users_is_like_videos` (`users_id`, `videos_id`, `is_like`, `date`) VALUES (1, 2, 1, NULL);
+INSERT INTO `youtube`.`users_is_like_videos` (`users_id`, `videos_id`, `is_like`, `date`) VALUES (2, 1, 1, NULL);
+INSERT INTO `youtube`.`users_is_like_videos` (`users_id`, `videos_id`, `is_like`, `date`) VALUES (2, 3, 0, NULL);
 
 COMMIT;
 
 
 -- -----------------------------------------------------
--- Data for table `youtube`.`users_likes_comments`
+-- Data for table `youtube`.`users_is_like_comments`
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `youtube`;
-INSERT INTO `youtube`.`users_likes_comments` (`users_id`, `comments_id`, `is_like`, `date`) VALUES (1, 1, '1', NULL);
-INSERT INTO `youtube`.`users_likes_comments` (`users_id`, `comments_id`, `is_like`, `date`) VALUES (2, 2, '1', NULL);
+INSERT INTO `youtube`.`users_is_like_comments` (`users_id`, `comments_id`, `is_like`, `date`) VALUES (1, 1, '1', NULL);
+INSERT INTO `youtube`.`users_is_like_comments` (`users_id`, `comments_id`, `is_like`, `date`) VALUES (2, 2, '1', NULL);
 
 COMMIT;
 
@@ -351,7 +313,6 @@ START TRANSACTION;
 USE `youtube`;
 INSERT INTO `youtube`.`playlists_has_videos` (`videos_id`, `playlists_id`) VALUES (1, 1);
 INSERT INTO `youtube`.`playlists_has_videos` (`videos_id`, `playlists_id`) VALUES (2, 2);
-INSERT INTO `youtube`.`playlists_has_videos` (`videos_id`, `playlists_id`) VALUES (4, 2);
 
 COMMIT;
 
@@ -371,6 +332,12 @@ ON phv.videos_id = v.id
 INNER JOIN users u
 ON u.id = v.user;
 
+-- result: 
+-- playlist_name | video          | playlist_owner
+---------------------------------------------------
+-- Animales      | Monkey jumping | jose_01
+-- Cats          | Cats smiling   | laura_01
+
 
 
 -- Mostra el comentaris que existeixen, el video a qui estan assignats, el propietari del video i el text del comentari
@@ -384,3 +351,9 @@ INNER JOIN users u
 ON u.id = c.user
 INNER JOIN users owner
 ON owner.id = v.id;
+
+-- result: 
+-- Owner_video | Video          | Comment from     | Comment
+------------------------------------------------------------------------------
+-- jose_01     | Monkey jumping | laura_01  Wow!   | I like it
+-- laura_01    | Cats smiling   | jose_01          | hahahah they are pretty

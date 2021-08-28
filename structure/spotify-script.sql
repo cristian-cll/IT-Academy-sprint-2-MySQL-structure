@@ -3,6 +3,12 @@ CREATE DATABASE spotify CHARACTER SET utf8mb4;
 
 
 -- -----------------------------------------------------
+-- Schema spotify
+-- -----------------------------------------------------
+CREATE SCHEMA IF NOT EXISTS `spotify` DEFAULT CHARACTER SET utf8 ;
+USE `spotify` ;
+
+-- -----------------------------------------------------
 -- Table `spotify`.`users`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `spotify`.`users` (
@@ -273,6 +279,28 @@ CREATE TABLE IF NOT EXISTS `spotify`.`users_shared_playlists` (
 ENGINE = InnoDB;
 
 
+-- -----------------------------------------------------
+-- Table `spotify`.`users_has_favourite_albums`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `spotify`.`users_has_favourite_albums` (
+  `users_id` INT NOT NULL,
+  `albums_id` INT NOT NULL,
+  `albums_artists_id` INT NOT NULL,
+  PRIMARY KEY (`users_id`, `albums_id`, `albums_artists_id`),
+  INDEX `fk_users_has_albums_albums1_idx` (`albums_id` ASC, `albums_artists_id` ASC) VISIBLE,
+  INDEX `fk_users_has_albums_users1_idx` (`users_id` ASC) VISIBLE,
+  CONSTRAINT `fk_users_has_albums_users1`
+    FOREIGN KEY (`users_id`)
+    REFERENCES `spotify`.`users` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_users_has_albums_albums1`
+    FOREIGN KEY (`albums_id` , `albums_artists_id`)
+    REFERENCES `spotify`.`albums` (`id` , `artists_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
 
 -- -----------------------------------------------------
 -- Data for table `spotify`.`users`
@@ -447,3 +475,8 @@ ON phs.playlists_id = p.id
 INNER JOIN songs s
 ON s.id = phs.songs_id
 WHERE p.users_id != u.id
+
+-- Result:
+-- user_name | Song          | Playlist_title
+-- laura_01  | Go Let It Out | Rock
+-- juan_01   | Satisfaction  | Rock
