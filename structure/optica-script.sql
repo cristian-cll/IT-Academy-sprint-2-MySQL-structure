@@ -1,5 +1,6 @@
 DROP DATABASE IF EXISTS optica;
-CREATE DATABASE optica CHARACTER SET utf8mb4;
+CREATE SCHEMA IF NOT EXISTS `optica` DEFAULT CHARACTER SET utf8mb4 ;
+USE `optica` ;
 
 -- -----------------------------------------------------
 -- Table `optica`.`tipos_montura`
@@ -34,29 +35,15 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `optica`.`gafas`
+-- Table `optica`.`marcas`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `optica`.`gafas` (
+CREATE TABLE IF NOT EXISTS `optica`.`marcas` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `marca` VARCHAR(45) NULL,
-  `modelo` VARCHAR(45) NULL,
-  `grad_der` FLOAT NULL,
-  `grad_izq` FLOAT NULL,
-  `color_der` VARCHAR(45) NULL,
-  `color_izq` VARCHAR(45) NULL,
-  `precio` FLOAT NULL,
-  `tipos_montura_id` INT NOT NULL,
+  `nombre` VARCHAR(45) NULL,
   `proveedores_id` INT NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE INDEX `modelo_UNIQUE` (`modelo` ASC) VISIBLE,
-  INDEX `fk_gafas_tipos_montura1_idx` (`tipos_montura_id` ASC) VISIBLE,
-  INDEX `fk_gafas_proveedores1_idx` (`proveedores_id` ASC) VISIBLE,
-  CONSTRAINT `fk_gafas_tipos_montura1`
-    FOREIGN KEY (`tipos_montura_id`)
-    REFERENCES `optica`.`tipos_montura` (`id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_gafas_proveedores1`
+  INDEX `fk_marcas_proveedores1_idx` (`proveedores_id` ASC) VISIBLE,
+  CONSTRAINT `fk_marcas_proveedores1`
     FOREIGN KEY (`proveedores_id`)
     REFERENCES `optica`.`proveedores` (`id`)
     ON DELETE NO ACTION
@@ -96,31 +83,46 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `optica`.`pedidos`
+-- Table `optica`.`gafas`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `optica`.`pedidos` (
+CREATE TABLE IF NOT EXISTS `optica`.`gafas` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `fecha` DATETIME NOT NULL,
-  `clientes_id` INT NOT NULL,
+  `marca` VARCHAR(45) NULL,
+  `modelo` VARCHAR(45) NULL,
+  `grad_der` FLOAT NULL,
+  `grad_izq` FLOAT NULL,
+  `color_der` VARCHAR(45) NULL,
+  `color_izq` VARCHAR(45) NULL,
+  `precio` FLOAT NULL,
+  `tipos_montura_id` INT NOT NULL,
+  `marcas_id` INT NOT NULL,
   `empleados_id` INT NOT NULL,
-  `gafas_id` INT NOT NULL,
+  `clientes_id` INT NOT NULL,
+  `fecha_venta` DATETIME NULL,
   PRIMARY KEY (`id`),
-  INDEX `fk_pedidos_clientes1_idx` (`clientes_id` ASC) VISIBLE,
-  INDEX `fk_pedidos_empleados1_idx` (`empleados_id` ASC) VISIBLE,
-  INDEX `fk_pedidos_gafas1_idx` (`gafas_id` ASC) VISIBLE,
-  CONSTRAINT `fk_pedidos_clientes1`
-    FOREIGN KEY (`clientes_id`)
-    REFERENCES `optica`.`clientes` (`id`)
+  UNIQUE INDEX `modelo_UNIQUE` (`modelo` ASC) VISIBLE,
+  INDEX `fk_gafas_tipos_montura1_idx` (`tipos_montura_id` ASC) VISIBLE,
+  INDEX `fk_gafas_marcas1_idx` (`marcas_id` ASC) VISIBLE,
+  INDEX `fk_gafas_empleados1_idx` (`empleados_id` ASC) VISIBLE,
+  INDEX `fk_gafas_clientes1_idx` (`clientes_id` ASC) VISIBLE,
+  CONSTRAINT `fk_gafas_tipos_montura1`
+    FOREIGN KEY (`tipos_montura_id`)
+    REFERENCES `optica`.`tipos_montura` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_pedidos_empleados1`
+  CONSTRAINT `fk_gafas_marcas1`
+    FOREIGN KEY (`marcas_id`)
+    REFERENCES `optica`.`marcas` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_gafas_empleados1`
     FOREIGN KEY (`empleados_id`)
     REFERENCES `optica`.`empleados` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_pedidos_gafas1`
-    FOREIGN KEY (`gafas_id`)
-    REFERENCES `optica`.`gafas` (`id`)
+  CONSTRAINT `fk_gafas_clientes1`
+    FOREIGN KEY (`clientes_id`)
+    REFERENCES `optica`.`clientes` (`id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -150,12 +152,12 @@ COMMIT;
 
 
 -- -----------------------------------------------------
--- Data for table `optica`.`gafas`
+-- Data for table `optica`.`marcas`
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `optica`;
-INSERT INTO `optica`.`gafas` (`id`, `marca`, `modelo`, `grad_der`, `grad_izq`, `color_der`, `color_izq`, `precio`, `tipos_montura_id`, `proveedores_id`) VALUES (DEFAULT, 'Rayban', 'Aviator', 0.5, 0.5, 'verde', 'verde', 120, 1, 1);
-INSERT INTO `optica`.`gafas` (`id`, `marca`, `modelo`, `grad_der`, `grad_izq`, `color_der`, `color_izq`, `precio`, `tipos_montura_id`, `proveedores_id`) VALUES (DEFAULT, 'Police', 'classic', 0, 0, 'gris', 'gris', 140, 2, 2);
+INSERT INTO `optica`.`marcas` (`id`, `nombre`, `proveedores_id`) VALUES (DEFAULT, 'Rayban', 1);
+INSERT INTO `optica`.`marcas` (`id`, `nombre`, `proveedores_id`) VALUES (DEFAULT, 'Police', 2);
 
 COMMIT;
 
@@ -183,49 +185,60 @@ COMMIT;
 
 
 -- -----------------------------------------------------
--- Data for table `optica`.`pedidos`
+-- Data for table `optica`.`gafas`
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `optica`;
-INSERT INTO `optica`.`pedidos` (`id`, `fecha`, `clientes_id`, `empleados_id`, `gafas_id`) VALUES (DEFAULT, '2021-06-28', 1, 1, 1);
-INSERT INTO `optica`.`pedidos` (`id`, `fecha`, `clientes_id`, `empleados_id`, `gafas_id`) VALUES (DEFAULT, '2021-06-24', 2, 2, 1);
-INSERT INTO `optica`.`pedidos` (`id`, `fecha`, `clientes_id`, `empleados_id`, `gafas_id`) VALUES (DEFAULT, '2021-06-15', 1, 2, 2);
-INSERT INTO `optica`.`pedidos` (`id`, `fecha`, `clientes_id`, `empleados_id`, `gafas_id`) VALUES (DEFAULT, '2021-06-05', 1, 1, 2);
+INSERT INTO `optica`.`gafas` (`id`, `marca`, `modelo`, `grad_der`, `grad_izq`, `color_der`, `color_izq`, `precio`, `tipos_montura_id`, `marcas_id`, `empleados_id`, `clientes_id`, `fecha_venta`) VALUES (DEFAULT, 'Rayban', 'Aviator', 0.5, 0.5, 'verde', 'verde', 120, 1, 1, 1, 2, '2020-01-01');
+INSERT INTO `optica`.`gafas` (`id`, `marca`, `modelo`, `grad_der`, `grad_izq`, `color_der`, `color_izq`, `precio`, `tipos_montura_id`, `marcas_id`, `empleados_id`, `clientes_id`, `fecha_venta`) VALUES (DEFAULT, 'Police', 'classic', 0, 0, 'gris', 'gris', 140, 2, 2, 2, 1, '2021-12-31');
 
 COMMIT;
+
 
 
 -- Llista el total de factures d'un client en un període determinat
 
 USE optica;
-SELECT c.nombre Cliente, c.direccion, COUNT(p.id) AS Pedidos, SUM(g.precio) AS "Precio total"
-FROM pedidos p
+SELECT c.nombre Cliente, c.direccion, COUNT(g.id) AS Pedidos, SUM(g.precio) AS "Precio total"
+FROM gafas g
 INNER JOIN clientes c
-ON p.clientes_id = c.id
-INNER JOIN gafas g
-ON p.gafas_id = g.id
-WHERE p.clientes_id = 1 AND p.fecha between '2021-06-01' AND '2021-06-30';
+ON g.clientes_id = c.id
+WHERE g.clientes_id = 1 AND g.fecha_venta between '2021-01-01' AND '2021-12-31';
+
+-- Result:
+-- Cliente  | direccion           | Pedidos | Precio total
+-------------------------------------------------------------
+-- Laura    | Sepulveda Barcelona | 1       | 140
 
 
 -- Llista els diferents models d'ulleres que ha venut un empleat durant un any
 
 USE optica;
-SELECT g.marca, g.modelo, e.nombre AS empleado, p.fecha
+SELECT g.marca, g.modelo, e.nombre AS empleado, g.fecha_venta
 FROM gafas g
-INNER JOIN pedidos p
-ON p.gafas_id = g.id
 INNER JOIN empleados e
-ON e.id = p.empleados_id
-WHERE p.empleados_id = 1 AND p.fecha between '2020-01-01' AND '2021-12-31';
+ON e.id = g.empleados_id
+WHERE g.empleados_id = 1 AND g.fecha_venta between '2020-01-01' AND '2021-12-31';
+
+-- Result:
+-- marca  | modelo  | empleado | fecha_venta
+-------------------------------------------------------
+-- Rayban | Aviator | Juan     | 2020-01-01 00:00:00
 
 
 -- Llista els diferents proveïdors que han subministrat ulleres venudes amb èxit per l'òptica
 
 USE optica;
 SELECT pr.nombre AS Proveedor, COUNT(g.id) AS Ventas
-FROM pedidos p
-INNER JOIN gafas g
-ON p.gafas_id = g.id
+FROM gafas g
+INNER JOIN marcas m
+ON m.id = g.marcas_id
 INNER JOIN proveedores pr
-ON g.proveedores_id = pr.id
+ON pr.id = m.proveedores_id
 GROUP BY pr.nombre;
+
+-- Result:
+-- Proveedor         | Ventas
+-------------------------------
+-- Optica Andorrana  | 1
+-- Vista cansada SL  | 1
